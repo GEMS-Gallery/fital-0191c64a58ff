@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Typography, Box, CircularProgress } from '@mui/material';
+import { Container, Typography, Box, CircularProgress, List, ListItem, ListItemText } from '@mui/material';
 import { Line } from 'react-chartjs-2';
 import { backend } from '../../declarations/backend';
 import {
@@ -26,7 +26,7 @@ ChartJS.register(
 type WorkoutProgress = {
   userId: bigint;
   date: bigint;
-  completedExercises: [string, number, number][];
+  completedExercises: [string, number, number, boolean][];
 };
 
 const Progress: React.FC = () => {
@@ -53,7 +53,7 @@ const Progress: React.FC = () => {
 
   const prepareChartData = () => {
     const dates = progressData.map(entry => new Date(Number(entry.date) / 1000000).toLocaleDateString());
-    const totalExercises = progressData.map(entry => entry.completedExercises.length);
+    const totalExercises = progressData.map(entry => entry.completedExercises.filter(ex => ex[3]).length);
 
     return {
       labels: dates,
@@ -84,9 +84,34 @@ const Progress: React.FC = () => {
           Your Progress
         </Typography>
         {progressData.length > 0 ? (
-          <Box sx={{ mt: 4 }}>
-            <Line data={prepareChartData()} />
-          </Box>
+          <>
+            <Box sx={{ mt: 4 }}>
+              <Line data={prepareChartData()} />
+            </Box>
+            <Box sx={{ mt: 4 }}>
+              <Typography variant="h5" gutterBottom>
+                Workout History
+              </Typography>
+              <List>
+                {progressData.map((workout, index) => (
+                  <ListItem key={index}>
+                    <ListItemText
+                      primary={new Date(Number(workout.date) / 1000000).toLocaleString()}
+                      secondary={
+                        <>
+                          {workout.completedExercises.map((exercise, exIndex) => (
+                            <Typography key={exIndex} component="span" variant="body2" display="block">
+                              {exercise[0]}: {exercise[1]} sets of {exercise[2]} reps - {exercise[3] ? 'Completed' : 'Not completed'}
+                            </Typography>
+                          ))}
+                        </>
+                      }
+                    />
+                  </ListItem>
+                ))}
+              </List>
+            </Box>
+          </>
         ) : (
           <Typography>No progress data available yet. Keep working out!</Typography>
         )}

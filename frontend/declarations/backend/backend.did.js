@@ -22,7 +22,9 @@ export const idlFactory = ({ IDL }) => {
   });
   const Time = IDL.Int;
   const WorkoutProgress = IDL.Record({
-    'completedExercises' : IDL.Vec(IDL.Tuple(IDL.Text, IDL.Nat, IDL.Nat)),
+    'completedExercises' : IDL.Vec(
+      IDL.Tuple(IDL.Text, IDL.Nat, IDL.Nat, IDL.Bool)
+    ),
     'userId' : IDL.Nat,
     'date' : Time,
   });

@@ -1,3 +1,4 @@
+import Bool "mo:base/Bool";
 import Hash "mo:base/Hash";
 
 import Array "mo:base/Array";
@@ -32,7 +33,7 @@ actor {
   type WorkoutProgress = {
     userId: Nat;
     date: Time.Time;
-    completedExercises: [(Text, Nat, Nat)]; // (exercise name, sets, reps)
+    completedExercises: [(Text, Nat, Nat, Bool)]; // (exercise name, sets, reps, completed)
   };
 
   type PlanAdjustments = {

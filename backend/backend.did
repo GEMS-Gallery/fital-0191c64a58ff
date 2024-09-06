@@ -4,6 +4,7 @@ type WorkoutProgress =
                              text;
                              nat;
                              nat;
+                             bool;
                            };
    date: Time;
    userId: nat;

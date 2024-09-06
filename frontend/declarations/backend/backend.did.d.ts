@@ -29,7 +29,7 @@ export interface WorkoutPlan {
   'exercises' : Array<[string, bigint, bigint]>,
 }
 export interface WorkoutProgress {
-  'completedExercises' : Array<[string, bigint, bigint]>,
+  'completedExercises' : Array<[string, bigint, bigint, boolean]>,
   'userId' : bigint,
   'date' : Time,
 }
