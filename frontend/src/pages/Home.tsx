@@ -10,10 +10,10 @@ const Home: React.FC = () => {
           Welcome to Your Personalized Workout Planner
         </Typography>
         <Typography variant="body1" paragraph>
-          Get started by creating your profile and generating a customized workout plan.
+          Get started by creating your personalized workout plan based on your preferences and fitness level.
         </Typography>
         <Button variant="contained" color="primary" component={RouterLink} to="/profile">
-          Create Profile
+          Create Workout Plan
         </Button>
       </Box>
     </Container>

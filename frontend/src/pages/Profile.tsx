@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Container, Typography, TextField, Button, Box, FormControl, InputLabel, Select, MenuItem, FormGroup, FormControlLabel, Checkbox } from '@mui/material';
+import { Container, Typography, TextField, Button, Box, FormControl, InputLabel, Select, MenuItem, FormGroup, FormControlLabel, Checkbox, List, ListItem, ListItemText } from '@mui/material';
 import { useForm, Controller } from 'react-hook-form';
 import { backend } from '../../declarations/backend';
 
@@ -10,25 +10,39 @@ type ProfileFormData = {
   equipment: string[];
 };
 
+type Exercise = {
+  0: string; // name
+  1: number; // sets
+  2: number; // reps
+};
+
+type WorkoutPlan = {
+  exercises: Exercise[];
+};
+
 const Profile: React.FC = () => {
   const { control, handleSubmit } = useForm<ProfileFormData>();
   const [otherPreference, setOtherPreference] = useState('');
   const [otherEquipment, setOtherEquipment] = useState('');
+  const [workoutPlan, setWorkoutPlan] = useState<WorkoutPlan | null>(null);
 
   const onSubmit = async (data: ProfileFormData) => {
     try {
-      const result = await backend.createUserProfile({
-        id: 0, // The backend will assign the actual ID
+      const preferences = {
         goals: data.goals,
         fitnessLevel: data.fitnessLevel,
         preferences: data.preferences.includes('Other') ? [...data.preferences.filter(p => p !== 'Other'), otherPreference] : data.preferences,
         equipment: data.equipment.includes('Other') ? [...data.equipment.filter(e => e !== 'Other'), otherEquipment] : data.equipment,
-      });
-      console.log('Profile created:', result);
-      // Handle success (e.g., show a success message, redirect to workout plan page)
+      };
+
+      const result = await backend.generateWorkoutPlan(preferences);
+      if ('ok' in result) {
+        setWorkoutPlan(result.ok);
+      } else {
+        console.error('Error generating workout plan:', result.err);
+      }
     } catch (error) {
-      console.error('Error creating profile:', error);
-      // Handle error (e.g., show an error message)
+      console.error('Error generating workout plan:', error);
     }
   };
 
@@ -36,7 +50,7 @@ const Profile: React.FC = () => {
     <Container maxWidth="sm">
       <Box sx={{ my: 4 }}>
         <Typography variant="h4" component="h1" gutterBottom>
-          Create Your Profile
+          Create Your Workout Plan
         </Typography>
         <form onSubmit={handleSubmit(onSubmit)}>
           <Controller
@@ -154,9 +168,27 @@ const Profile: React.FC = () => {
             )}
           />
           <Button type="submit" variant="contained" color="primary" sx={{ mt: 2 }}>
-            Create Profile
+            Generate Workout Plan
           </Button>
         </form>
+
+        {workoutPlan && (
+          <Box sx={{ mt: 4 }}>
+            <Typography variant="h5" gutterBottom>
+              Your Personalized Workout Plan
+            </Typography>
+            <List>
+              {workoutPlan.exercises.map((exercise, index) => (
+                <ListItem key={index}>
+                  <ListItemText
+                    primary={exercise[0]}
+                    secondary={`${exercise[1]} sets of ${exercise[2]} reps`}
+                  />
+                </ListItem>
+              ))}
+            </List>
+          </Box>
+        )}
       </Box>
     </Container>
   );

@@ -24,7 +24,6 @@ ChartJS.register(
 );
 
 type WorkoutProgress = {
-  userId: bigint;
   date: bigint;
   completedExercises: [string, number, number, boolean][];
 };
@@ -35,24 +34,41 @@ const Progress: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchProgressData();
+    // For now, we'll use mock data since we don't have a way to fetch progress data
+    const mockProgressData: WorkoutProgress[] = [
+      {
+        date: BigInt(Date.now() - 7 * 24 * 60 * 60 * 1000),
+        completedExercises: [
+          ["Push-ups", 3, 10, true],
+          ["Squats", 3, 12, true],
+          ["Plank", 3, 30, false],
+        ],
+      },
+      {
+        date: BigInt(Date.now() - 3 * 24 * 60 * 60 * 1000),
+        completedExercises: [
+          ["Push-ups", 3, 12, true],
+          ["Squats", 3, 15, true],
+          ["Plank", 3, 45, true],
+        ],
+      },
+      {
+        date: BigInt(Date.now()),
+        completedExercises: [
+          ["Push-ups", 4, 12, true],
+          ["Squats", 4, 15, true],
+          ["Plank", 3, 60, true],
+          ["Lunges", 3, 10, true],
+        ],
+      },
+    ];
+
+    setProgressData(mockProgressData);
+    setLoading(false);
   }, []);
 
-  const fetchProgressData = async () => {
-    try {
-      setLoading(true);
-      // Assuming the user ID is 1 for this example. In a real app, you'd get this from authentication.
-      const result = await backend.getProgressHistory(BigInt(1));
-      setProgressData(result);
-    } catch (err) {
-      setError('Failed to fetch progress data');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const prepareChartData = () => {
-    const dates = progressData.map(entry => new Date(Number(entry.date) / 1000000).toLocaleDateString());
+    const dates = progressData.map(entry => new Date(Number(entry.date)).toLocaleDateString());
     const totalExercises = progressData.map(entry => entry.completedExercises.filter(ex => ex[3]).length);
 
     return {
@@ -96,7 +112,7 @@ const Progress: React.FC = () => {
                 {progressData.map((workout, index) => (
                   <ListItem key={index}>
                     <ListItemText
-                      primary={new Date(Number(workout.date) / 1000000).toLocaleString()}
+                      primary={new Date(Number(workout.date)).toLocaleString()}
                       secondary={
                         <>
                           {workout.completedExercises.map((exercise, exIndex) => (

@@ -7,41 +7,26 @@ export interface Exercise {
   'name' : string,
   'description' : string,
 }
-export interface PlanAdjustments {
-  'addExercises' : Array<string>,
-  'removeExercises' : Array<string>,
-}
 export type Result = { 'ok' : null } |
   { 'err' : string };
 export type Result_1 = { 'ok' : WorkoutPlan } |
   { 'err' : string };
-export type Result_2 = { 'ok' : bigint } |
-  { 'err' : string };
 export type Time = bigint;
-export interface UserProfile {
-  'id' : bigint,
+export interface UserPreferences {
   'fitnessLevel' : string,
   'equipment' : Array<string>,
   'preferences' : Array<string>,
   'goals' : Array<string>,
 }
-export interface WorkoutPlan {
-  'userId' : bigint,
-  'exercises' : Array<[string, bigint, bigint]>,
-}
+export interface WorkoutPlan { 'exercises' : Array<[string, bigint, bigint]> }
 export interface WorkoutProgress {
   'completedExercises' : Array<[string, bigint, bigint, boolean]>,
-  'userId' : bigint,
   'date' : Time,
 }
 export interface _SERVICE {
-  'adjustWorkoutPlan' : ActorMethod<[bigint, PlanAdjustments], Result_1>,
-  'createUserProfile' : ActorMethod<[UserProfile], Result_2>,
-  'generateWorkoutPlan' : ActorMethod<[bigint], Result_1>,
+  'generateWorkoutPlan' : ActorMethod<[UserPreferences], Result_1>,
   'getExerciseLibrary' : ActorMethod<[], Array<Exercise>>,
-  'getProgressHistory' : ActorMethod<[bigint], Array<WorkoutProgress>>,
-  'getUserProfile' : ActorMethod<[bigint], [] | [UserProfile]>,
-  'logWorkoutProgress' : ActorMethod<[bigint, WorkoutProgress], Result>,
+  'logWorkoutProgress' : ActorMethod<[WorkoutProgress], Result>,
 }
 export declare const idlFactory: IDL.InterfaceFactory;
 export declare const init: (args: { IDL: typeof IDL }) => IDL.Type[];

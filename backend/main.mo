@@ -1,5 +1,6 @@
 import Bool "mo:base/Bool";
 import Hash "mo:base/Hash";
+import Int "mo:base/Int";
 
 import Array "mo:base/Array";
 import HashMap "mo:base/HashMap";
@@ -12,8 +13,7 @@ import Text "mo:base/Text";
 import Option "mo:base/Option";
 
 actor {
-  type UserProfile = {
-    id: Nat;
+  type UserPreferences = {
     goals: [Text];
     fitnessLevel: Text;
     preferences: [Text];
@@ -27,25 +27,13 @@ actor {
   };
 
   type WorkoutPlan = {
-    userId: Nat;
     exercises: [(Text, Nat, Nat)]; // (exercise name, sets, reps)
   };
 
   type WorkoutProgress = {
-    userId: Nat;
     date: Time.Time;
     completedExercises: [(Text, Nat, Nat, Bool)]; // (exercise name, sets, reps, completed)
   };
-
-  type PlanAdjustments = {
-    addExercises: [Text];
-    removeExercises: [Text];
-  };
-
-  stable var nextUserId : Nat = 0;
-  let userProfiles = HashMap.HashMap<Nat, UserProfile>(0, Nat.equal, Hash.hash);
-  let workoutPlans = HashMap.HashMap<Nat, WorkoutPlan>(0, Nat.equal, Hash.hash);
-  let progressHistory = HashMap.HashMap<Nat, [WorkoutProgress]>(0, Nat.equal, Hash.hash);
 
   let exerciseLibrary : [Exercise] = [
     { name = "Push-ups"; description = "Standard push-ups"; difficulty = 2 },
@@ -55,83 +43,39 @@ actor {
     { name = "Burpees"; description = "Full body burpees"; difficulty = 4 },
   ];
 
-  public func createUserProfile(profile: UserProfile) : async Result.Result<Nat, Text> {
-    let userId = nextUserId;
-    nextUserId += 1;
-    let newProfile = {
-      id = userId;
-      goals = profile.goals;
-      fitnessLevel = profile.fitnessLevel;
-      preferences = profile.preferences;
-      equipment = profile.equipment;
+  public func generateWorkoutPlan(preferences: UserPreferences) : async Result.Result<WorkoutPlan, Text> {
+    let difficultyLevel = switch (preferences.fitnessLevel) {
+      case "Beginner" 1;
+      case "Intermediate" 2;
+      case "Advanced" 3;
+      case _ 1;
     };
-    userProfiles.put(userId, newProfile);
-    #ok(userId)
-  };
 
-  public query func getUserProfile(userId: Nat) : async ?UserProfile {
-    userProfiles.get(userId)
-  };
+    let filteredExercises = Array.filter(exerciseLibrary, func(ex: Exercise) : Bool {
+      ex.difficulty <= difficultyLevel + 1
+    });
 
-  public func generateWorkoutPlan(userId: Nat) : async Result.Result<WorkoutPlan, Text> {
-    switch (userProfiles.get(userId)) {
-      case null { #err("User not found") };
-      case (?profile) {
-        let exercises = Array.tabulate<(Text, Nat, Nat)>(5, func(i) {
-          let exercise = exerciseLibrary[i % exerciseLibrary.size()];
-          (exercise.name, 3, 10) // Default to 3 sets of 10 reps
-        });
-        let plan = {
-          userId = userId;
-          exercises = exercises;
-        };
-        workoutPlans.put(userId, plan);
-        #ok(plan)
+    let selectedExercises = Array.tabulate<(Text, Nat, Nat)>(5, func(i) {
+      let exercise = filteredExercises[i % filteredExercises.size()];
+      let (sets, reps) = switch (preferences.fitnessLevel) {
+        case "Beginner" (2, 8);
+        case "Intermediate" (3, 10);
+        case "Advanced" (4, 12);
+        case _ (2, 8);
       };
-    }
+      (exercise.name, sets, reps)
+    });
+
+    #ok({ exercises = selectedExercises })
   };
 
   public query func getExerciseLibrary() : async [Exercise] {
     exerciseLibrary
   };
 
-  public func logWorkoutProgress(userId: Nat, progress: WorkoutProgress) : async Result.Result<(), Text> {
-    switch (progressHistory.get(userId)) {
-      case null {
-        progressHistory.put(userId, [progress]);
-      };
-      case (?history) {
-        progressHistory.put(userId, Array.append(history, [progress]));
-      };
-    };
+  public func logWorkoutProgress(progress: WorkoutProgress) : async Result.Result<(), Text> {
+    // Here you would typically save the progress to some persistent storage
+    // For now, we'll just return a success result
     #ok(())
-  };
-
-  public query func getProgressHistory(userId: Nat) : async [WorkoutProgress] {
-    switch (progressHistory.get(userId)) {
-      case null { [] };
-      case (?history) { history };
-    }
-  };
-
-  public func adjustWorkoutPlan(userId: Nat, adjustments: PlanAdjustments) : async Result.Result<WorkoutPlan, Text> {
-    switch (workoutPlans.get(userId)) {
-      case null { #err("Workout plan not found") };
-      case (?plan) {
-        let updatedExercises = Array.filter<(Text, Nat, Nat)>(plan.exercises, func(ex) {
-          not Array.exists<Text>(adjustments.removeExercises, func(name) { name == ex.0 })
-        });
-        let newExercises = Array.map<Text, (Text, Nat, Nat)>(adjustments.addExercises, func(name) {
-          (name, 3, 10) // Default to 3 sets of 10 reps for new exercises
-        });
-        let finalExercises = Array.append<(Text, Nat, Nat)>(updatedExercises, newExercises);
-        let updatedPlan = {
-          userId = userId;
-          exercises = finalExercises;
-        };
-        workoutPlans.put(userId, updatedPlan);
-        #ok(updatedPlan)
-      };
-    }
   };
 }
