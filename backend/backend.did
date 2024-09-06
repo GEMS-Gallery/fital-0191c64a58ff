@@ -20,8 +20,9 @@ type WorkoutPlan =
  };
 type UserProfile = 
  record {
-   fitnessLevel: nat;
-   goals: text;
+   equipment: vec text;
+   fitnessLevel: text;
+   goals: vec text;
    id: nat;
    preferences: vec text;
  };

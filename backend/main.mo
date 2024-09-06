@@ -14,9 +14,10 @@ import Option "mo:base/Option";
 actor {
   type UserProfile = {
     id: Nat;
-    goals: Text;
-    fitnessLevel: Nat;
+    goals: [Text];
+    fitnessLevel: Text;
     preferences: [Text];
+    equipment: [Text];
   };
 
   type Exercise = {
@@ -62,6 +63,7 @@ actor {
       goals = profile.goals;
       fitnessLevel = profile.fitnessLevel;
       preferences = profile.preferences;
+      equipment = profile.equipment;
     };
     userProfiles.put(userId, newProfile);
     #ok(userId)

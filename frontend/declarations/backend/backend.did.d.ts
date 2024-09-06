@@ -20,9 +20,10 @@ export type Result_2 = { 'ok' : bigint } |
 export type Time = bigint;
 export interface UserProfile {
   'id' : bigint,
-  'fitnessLevel' : bigint,
+  'fitnessLevel' : string,
+  'equipment' : Array<string>,
   'preferences' : Array<string>,
-  'goals' : string,
+  'goals' : Array<string>,
 }
 export interface WorkoutPlan {
   'userId' : bigint,

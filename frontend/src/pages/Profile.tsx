@@ -1,18 +1,19 @@
 import React, { useState } from 'react';
-import { Container, Typography, TextField, Button, Box, Slider, Chip } from '@mui/material';
+import { Container, Typography, TextField, Button, Box, FormControl, InputLabel, Select, MenuItem, FormGroup, FormControlLabel, Checkbox } from '@mui/material';
 import { useForm, Controller } from 'react-hook-form';
 import { backend } from '../../declarations/backend';
 
 type ProfileFormData = {
-  goals: string;
-  fitnessLevel: number;
+  goals: string[];
+  fitnessLevel: string;
   preferences: string[];
+  equipment: string[];
 };
 
 const Profile: React.FC = () => {
   const { control, handleSubmit } = useForm<ProfileFormData>();
-  const [preferences, setPreferences] = useState<string[]>([]);
-  const [newPreference, setNewPreference] = useState('');
+  const [otherPreference, setOtherPreference] = useState('');
+  const [otherEquipment, setOtherEquipment] = useState('');
 
   const onSubmit = async (data: ProfileFormData) => {
     try {
@@ -20,7 +21,8 @@ const Profile: React.FC = () => {
         id: 0, // The backend will assign the actual ID
         goals: data.goals,
         fitnessLevel: data.fitnessLevel,
-        preferences: preferences,
+        preferences: data.preferences.includes('Other') ? [...data.preferences.filter(p => p !== 'Other'), otherPreference] : data.preferences,
+        equipment: data.equipment.includes('Other') ? [...data.equipment.filter(e => e !== 'Other'), otherEquipment] : data.equipment,
       });
       console.log('Profile created:', result);
       // Handle success (e.g., show a success message, redirect to workout plan page)
@@ -28,17 +30,6 @@ const Profile: React.FC = () => {
       console.error('Error creating profile:', error);
       // Handle error (e.g., show an error message)
     }
-  };
-
-  const addPreference = () => {
-    if (newPreference && !preferences.includes(newPreference)) {
-      setPreferences([...preferences, newPreference]);
-      setNewPreference('');
-    }
-  };
-
-  const removePreference = (pref: string) => {
-    setPreferences(preferences.filter((p) => p !== pref));
   };
 
   return (
@@ -51,59 +42,117 @@ const Profile: React.FC = () => {
           <Controller
             name="goals"
             control={control}
-            defaultValue=""
-            rules={{ required: 'Goals are required' }}
-            render={({ field, fieldState: { error } }) => (
-              <TextField
-                {...field}
-                label="Fitness Goals"
-                fullWidth
-                margin="normal"
-                error={!!error}
-                helperText={error?.message}
-              />
+            defaultValue={[]}
+            rules={{ required: 'Fitness goals are required' }}
+            render={({ field }) => (
+              <FormControl fullWidth margin="normal">
+                <InputLabel>Fitness Goals</InputLabel>
+                <Select
+                  {...field}
+                  multiple
+                  renderValue={(selected) => (selected as string[]).join(', ')}
+                >
+                  <MenuItem value="Weight Loss">Weight Loss</MenuItem>
+                  <MenuItem value="Muscle Gain">Muscle Gain</MenuItem>
+                  <MenuItem value="Endurance">Endurance</MenuItem>
+                  <MenuItem value="Flexibility">Flexibility</MenuItem>
+                  <MenuItem value="General Fitness">General Fitness</MenuItem>
+                </Select>
+              </FormControl>
             )}
           />
           <Controller
             name="fitnessLevel"
             control={control}
-            defaultValue={1}
+            defaultValue=""
             rules={{ required: 'Fitness level is required' }}
             render={({ field }) => (
-              <Box sx={{ mt: 2 }}>
-                <Typography gutterBottom>Fitness Level</Typography>
-                <Slider
-                  {...field}
-                  aria-label="Fitness Level"
-                  valueLabelDisplay="auto"
-                  step={1}
-                  marks
-                  min={1}
-                  max={5}
-                />
-              </Box>
+              <FormControl fullWidth margin="normal">
+                <InputLabel>Current Fitness Level</InputLabel>
+                <Select {...field}>
+                  <MenuItem value="Beginner">Beginner</MenuItem>
+                  <MenuItem value="Intermediate">Intermediate</MenuItem>
+                  <MenuItem value="Advanced">Advanced</MenuItem>
+                </Select>
+              </FormControl>
             )}
           />
-          <Box sx={{ mt: 2 }}>
-            <Typography gutterBottom>Exercise Preferences</Typography>
-            <TextField
-              label="Add Preference"
-              value={newPreference}
-              onChange={(e) => setNewPreference(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && addPreference()}
-            />
-            <Button onClick={addPreference}>Add</Button>
-            <Box sx={{ mt: 1 }}>
-              {preferences.map((pref) => (
-                <Chip
-                  key={pref}
-                  label={pref}
-                  onDelete={() => removePreference(pref)}
-                  sx={{ mr: 1, mb: 1 }}
-                />
-              ))}
-            </Box>
-          </Box>
+          <Controller
+            name="preferences"
+            control={control}
+            defaultValue={[]}
+            render={({ field }) => (
+              <FormControl component="fieldset" fullWidth margin="normal">
+                <Typography variant="subtitle1">Workout Preferences</Typography>
+                <FormGroup>
+                  {['Cardio', 'Strength Training', 'HIIT', 'Yoga', 'Pilates', 'Other'].map((pref) => (
+                    <FormControlLabel
+                      key={pref}
+                      control={
+                        <Checkbox
+                          checked={field.value.includes(pref)}
+                          onChange={(e) => {
+                            const updatedPreferences = e.target.checked
+                              ? [...field.value, pref]
+                              : field.value.filter((p: string) => p !== pref);
+                            field.onChange(updatedPreferences);
+                          }}
+                        />
+                      }
+                      label={pref}
+                    />
+                  ))}
+                </FormGroup>
+                {field.value.includes('Other') && (
+                  <TextField
+                    label="Other Preference"
+                    value={otherPreference}
+                    onChange={(e) => setOtherPreference(e.target.value)}
+                    fullWidth
+                    margin="normal"
+                  />
+                )}
+              </FormControl>
+            )}
+          />
+          <Controller
+            name="equipment"
+            control={control}
+            defaultValue={[]}
+            render={({ field }) => (
+              <FormControl component="fieldset" fullWidth margin="normal">
+                <Typography variant="subtitle1">Available Equipment</Typography>
+                <FormGroup>
+                  {['Dumbbells', 'Resistance Bands', 'Treadmill', 'Exercise Bike', 'None', 'Other'].map((equip) => (
+                    <FormControlLabel
+                      key={equip}
+                      control={
+                        <Checkbox
+                          checked={field.value.includes(equip)}
+                          onChange={(e) => {
+                            const updatedEquipment = e.target.checked
+                              ? [...field.value, equip]
+                              : field.value.filter((e: string) => e !== equip);
+                            field.onChange(updatedEquipment);
+                          }}
+                        />
+                      }
+                      label={equip}
+                    />
+                  ))}
+                </FormGroup>
+                {field.value.includes('Other') && (
+                  <TextField
+                    label="Other Equipment"
+                    value={otherEquipment}
+                    onChange={(e) => setOtherEquipment(e.target.value)}
+                    fullWidth
+                    margin="normal"
+                  />
+                )}
+              </FormControl>
+            )}
+          />
           <Button type="submit" variant="contained" color="primary" sx={{ mt: 2 }}>
             Create Profile
           </Button>

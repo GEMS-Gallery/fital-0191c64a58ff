@@ -10,9 +10,10 @@ export const idlFactory = ({ IDL }) => {
   const Result_1 = IDL.Variant({ 'ok' : WorkoutPlan, 'err' : IDL.Text });
   const UserProfile = IDL.Record({
     'id' : IDL.Nat,
-    'fitnessLevel' : IDL.Nat,
+    'fitnessLevel' : IDL.Text,
+    'equipment' : IDL.Vec(IDL.Text),
     'preferences' : IDL.Vec(IDL.Text),
-    'goals' : IDL.Text,
+    'goals' : IDL.Vec(IDL.Text),
   });
   const Result_2 = IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text });
   const Exercise = IDL.Record({
