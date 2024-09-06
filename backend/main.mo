@@ -26,13 +26,22 @@ actor {
     difficulty: Nat;
   };
 
+  type WorkoutExercise = {
+    name: Text;
+    sets: Nat;
+    reps: Nat;
+    completed: Bool;
+    userDifficulty: Text;
+  };
+
   type WorkoutPlan = {
-    exercises: [(Text, Nat, Nat)]; // (exercise name, sets, reps)
+    exercises: [WorkoutExercise];
+    date: Time.Time;
   };
 
   type WorkoutProgress = {
     date: Time.Time;
-    completedExercises: [(Text, Nat, Nat, Bool)]; // (exercise name, sets, reps, completed)
+    completedExercises: [WorkoutExercise];
   };
 
   let exerciseLibrary : [Exercise] = [
@@ -42,6 +51,9 @@ actor {
     { name = "Plank"; description = "Standard plank hold"; difficulty = 3 },
     { name = "Burpees"; description = "Full body burpees"; difficulty = 4 },
   ];
+
+  var currentWorkoutPlan : ?WorkoutPlan = null;
+  var workoutProgress : [WorkoutProgress] = [];
 
   public func generateWorkoutPlan(preferences: UserPreferences) : async Result.Result<WorkoutPlan, Text> {
     let difficultyLevel = switch (preferences.fitnessLevel) {
@@ -55,7 +67,7 @@ actor {
       ex.difficulty <= difficultyLevel + 1
     });
 
-    let selectedExercises = Array.tabulate<(Text, Nat, Nat)>(5, func(i) {
+    let selectedExercises = Array.tabulate<WorkoutExercise>(5, func(i) {
       let exercise = filteredExercises[i % filteredExercises.size()];
       let (sets, reps) = switch (preferences.fitnessLevel) {
         case "Beginner" (2, 8);
@@ -63,19 +75,70 @@ actor {
         case "Advanced" (4, 12);
         case _ (2, 8);
       };
-      (exercise.name, sets, reps)
+      {
+        name = exercise.name;
+        sets = sets;
+        reps = reps;
+        completed = false;
+        userDifficulty = "Medium";
+      }
     });
 
-    #ok({ exercises = selectedExercises })
+    let plan = {
+      exercises = selectedExercises;
+      date = Time.now();
+    };
+    currentWorkoutPlan := ?plan;
+    #ok(plan)
+  };
+
+  public query func getCurrentWorkoutPlan() : async ?WorkoutPlan {
+    currentWorkoutPlan
+  };
+
+  public func updateExerciseStatus(exerciseName: Text, completed: Bool, difficulty: Text) : async Result.Result<(), Text> {
+    switch (currentWorkoutPlan) {
+      case null #err("No current workout plan");
+      case (?plan) {
+        let updatedExercises = Array.map<WorkoutExercise, WorkoutExercise>(plan.exercises, func(ex) {
+          if (ex.name == exerciseName) {
+            {
+              name = ex.name;
+              sets = ex.sets;
+              reps = ex.reps;
+              completed = completed;
+              userDifficulty = difficulty;
+            }
+          } else {
+            ex
+          }
+        });
+        currentWorkoutPlan := ?{ exercises = updatedExercises; date = plan.date };
+        #ok(())
+      };
+    }
+  };
+
+  public func saveWorkoutProgress() : async Result.Result<(), Text> {
+    switch (currentWorkoutPlan) {
+      case null #err("No current workout plan to save");
+      case (?plan) {
+        let progress : WorkoutProgress = {
+          date = Time.now();
+          completedExercises = Array.filter<WorkoutExercise>(plan.exercises, func(ex) { ex.completed });
+        };
+        workoutProgress := Array.append<WorkoutProgress>(workoutProgress, [progress]);
+        currentWorkoutPlan := null;
+        #ok(())
+      };
+    }
+  };
+
+  public query func getWorkoutProgress() : async [WorkoutProgress] {
+    workoutProgress
   };
 
   public query func getExerciseLibrary() : async [Exercise] {
     exerciseLibrary
-  };
-
-  public func logWorkoutProgress(progress: WorkoutProgress) : async Result.Result<(), Text> {
-    // Here you would typically save the progress to some persistent storage
-    // For now, we'll just return a success result
-    #ok(())
   };
 }

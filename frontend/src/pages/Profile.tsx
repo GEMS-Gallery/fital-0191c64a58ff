@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { Container, Typography, TextField, Button, Box, FormControl, InputLabel, Select, MenuItem, FormGroup, FormControlLabel, Checkbox, List, ListItem, ListItemText } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
+import { Container, Typography, TextField, Button, Box, FormControl, InputLabel, Select, MenuItem, FormGroup, FormControlLabel, Checkbox } from '@mui/material';
 import { useForm, Controller } from 'react-hook-form';
 import { backend } from '../../declarations/backend';
+import { useWorkout } from '../contexts/WorkoutContext';
 
 type ProfileFormData = {
   goals: string[];
@@ -10,21 +12,12 @@ type ProfileFormData = {
   equipment: string[];
 };
 
-type Exercise = {
-  0: string; // name
-  1: number; // sets
-  2: number; // reps
-};
-
-type WorkoutPlan = {
-  exercises: Exercise[];
-};
-
 const Profile: React.FC = () => {
   const { control, handleSubmit } = useForm<ProfileFormData>();
   const [otherPreference, setOtherPreference] = useState('');
   const [otherEquipment, setOtherEquipment] = useState('');
-  const [workoutPlan, setWorkoutPlan] = useState<WorkoutPlan | null>(null);
+  const { setWorkoutPlan } = useWorkout();
+  const navigate = useNavigate();
 
   const onSubmit = async (data: ProfileFormData) => {
     try {
@@ -38,6 +31,7 @@ const Profile: React.FC = () => {
       const result = await backend.generateWorkoutPlan(preferences);
       if ('ok' in result) {
         setWorkoutPlan(result.ok);
+        navigate('/exercises');
       } else {
         console.error('Error generating workout plan:', result.err);
       }
@@ -171,24 +165,6 @@ const Profile: React.FC = () => {
             Generate Workout Plan
           </Button>
         </form>
-
-        {workoutPlan && (
-          <Box sx={{ mt: 4 }}>
-            <Typography variant="h5" gutterBottom>
-              Your Personalized Workout Plan
-            </Typography>
-            <List>
-              {workoutPlan.exercises.map((exercise, index) => (
-                <ListItem key={index}>
-                  <ListItemText
-                    primary={exercise[0]}
-                    secondary={`${exercise[1]} sets of ${exercise[2]} reps`}
-                  />
-                </ListItem>
-              ))}
-            </List>
-          </Box>
-        )}
       </Box>
     </Container>
   );

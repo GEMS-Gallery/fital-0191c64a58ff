@@ -18,15 +18,28 @@ export interface UserPreferences {
   'preferences' : Array<string>,
   'goals' : Array<string>,
 }
-export interface WorkoutPlan { 'exercises' : Array<[string, bigint, bigint]> }
+export interface WorkoutExercise {
+  'name' : string,
+  'reps' : bigint,
+  'sets' : bigint,
+  'completed' : boolean,
+  'userDifficulty' : string,
+}
+export interface WorkoutPlan {
+  'date' : Time,
+  'exercises' : Array<WorkoutExercise>,
+}
 export interface WorkoutProgress {
-  'completedExercises' : Array<[string, bigint, bigint, boolean]>,
+  'completedExercises' : Array<WorkoutExercise>,
   'date' : Time,
 }
 export interface _SERVICE {
   'generateWorkoutPlan' : ActorMethod<[UserPreferences], Result_1>,
+  'getCurrentWorkoutPlan' : ActorMethod<[], [] | [WorkoutPlan]>,
   'getExerciseLibrary' : ActorMethod<[], Array<Exercise>>,
-  'logWorkoutProgress' : ActorMethod<[WorkoutProgress], Result>,
+  'getWorkoutProgress' : ActorMethod<[], Array<WorkoutProgress>>,
+  'saveWorkoutProgress' : ActorMethod<[], Result>,
+  'updateExerciseStatus' : ActorMethod<[string, boolean, string], Result>,
 }
 export declare const idlFactory: IDL.InterfaceFactory;
 export declare const init: (args: { IDL: typeof IDL }) => IDL.Type[];

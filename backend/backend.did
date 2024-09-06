@@ -1,18 +1,21 @@
 type WorkoutProgress = 
  record {
-   completedExercises: vec record {
-                             text;
-                             nat;
-                             nat;
-                             bool;
-                           };
+   completedExercises: vec WorkoutExercise;
    date: Time;
  };
-type WorkoutPlan = record {exercises: vec record {
-                                            text;
-                                            nat;
-                                            nat;
-                                          };};
+type WorkoutPlan = 
+ record {
+   date: Time;
+   exercises: vec WorkoutExercise;
+ };
+type WorkoutExercise = 
+ record {
+   completed: bool;
+   name: text;
+   reps: nat;
+   sets: nat;
+   userDifficulty: text;
+ };
 type UserPreferences = 
  record {
    equipment: vec text;
@@ -39,6 +42,9 @@ type Exercise =
  };
 service : {
   generateWorkoutPlan: (UserPreferences) -> (Result_1);
+  getCurrentWorkoutPlan: () -> (opt WorkoutPlan) query;
   getExerciseLibrary: () -> (vec Exercise) query;
-  logWorkoutProgress: (WorkoutProgress) -> (Result);
+  getWorkoutProgress: () -> (vec WorkoutProgress) query;
+  saveWorkoutProgress: () -> (Result);
+  updateExerciseStatus: (text, bool, text) -> (Result);
 }
