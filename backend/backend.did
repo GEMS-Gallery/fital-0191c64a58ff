@@ -1,0 +1,62 @@
+type WorkoutProgress = 
+ record {
+   completedExercises: vec record {
+                             text;
+                             nat;
+                             nat;
+                           };
+   date: Time;
+   userId: nat;
+ };
+type WorkoutPlan = 
+ record {
+   exercises: vec record {
+                    text;
+                    nat;
+                    nat;
+                  };
+   userId: nat;
+ };
+type UserProfile = 
+ record {
+   fitnessLevel: nat;
+   goals: text;
+   id: nat;
+   preferences: vec text;
+ };
+type Time = int;
+type Result_2 = 
+ variant {
+   err: text;
+   ok: nat;
+ };
+type Result_1 = 
+ variant {
+   err: text;
+   ok: WorkoutPlan;
+ };
+type Result = 
+ variant {
+   err: text;
+   ok;
+ };
+type PlanAdjustments = 
+ record {
+   addExercises: vec text;
+   removeExercises: vec text;
+ };
+type Exercise = 
+ record {
+   description: text;
+   difficulty: nat;
+   name: text;
+ };
+service : {
+  adjustWorkoutPlan: (nat, PlanAdjustments) -> (Result_1);
+  createUserProfile: (UserProfile) -> (Result_2);
+  generateWorkoutPlan: (nat) -> (Result_1);
+  getExerciseLibrary: () -> (vec Exercise) query;
+  getProgressHistory: (nat) -> (vec WorkoutProgress) query;
+  getUserProfile: (nat) -> (opt UserProfile) query;
+  logWorkoutProgress: (nat, WorkoutProgress) -> (Result);
+}
